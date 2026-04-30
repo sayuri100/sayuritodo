@@ -172,17 +172,6 @@
                 transform: translateY(0);
             }
         }
-        
-        /* 删除按钮样式 */
-        .delete-btn {
-            opacity: 0.6;
-            transition: opacity 0.2s ease;
-        }
-        
-        .delete-btn:hover {
-            opacity: 1;
-            color: #e53e3e;
-        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -586,7 +575,6 @@
         let expandedNotes = {}; // 存储展开的笔记状态
         let selectedWeekday = null; // 存储选中的周几
         let selectedWeekDate = null; // 存储选中的周日期
-        let deletedTaskIds = new Set(); // 存储已删除的任务ID，用于数据清理
 
         // DOM 加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -723,7 +711,6 @@
                 currentUser = null;
                 tasks = [];
                 expandedNotes = {};
-                deletedTaskIds.clear();
                 closeModal();
                 showAuth();
             }
@@ -854,28 +841,9 @@
 
         function deleteTask(id) {
             if (confirm('确定要删除这个任务吗？')) {
-                // 记录已删除的任务ID
-                deletedTaskIds.add(id);
-                
-                // 从任务列表中移除
                 tasks = tasks.filter(t => t.id != id);
                 saveData();
                 renderAll();
-                
-                // 清理被删除的任务的数据
-                setTimeout(() => {
-                    cleanupDeletedTasks();
-                }, 1000);
-            }
-        }
-
-        // 清理已删除的任务数据
-        function cleanupDeletedTasks() {
-            if (deletedTaskIds.size > 0) {
-                // 这里可以添加额外的清理逻辑
-                console.log(`已清理 ${deletedTaskIds.size} 个被删除的任务`);
-                // 清理完后可以清空集合
-                // deletedTaskIds.clear(); // 可以根据需要决定是否清空
             }
         }
 
@@ -963,7 +931,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <button onclick="deleteTask(${task.id})" class="ml-2 delete-btn text-brown-400 hover:text-red-600">
+                                    <button onclick="deleteTask(${task.id})" class="ml-2 text-brown-400 hover:text-red-600">
                                         <i class="fas fa-trash-alt text-sm"></i>
                                     </button>
                                 </div>
@@ -1050,7 +1018,7 @@
                         </select>
                     </td>
                     <td class="px-4 py-3">
-                        <button onclick="deleteTask(${task.id})" class="delete-btn text-red-500 hover:text-red-700">
+                        <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -1246,7 +1214,7 @@
                                 <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
                                 <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
                             </select>
-                            <button onclick="deleteTask(${task.id})" class="delete-btn text-red-500 hover:text-red-700">
+                            <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -1358,7 +1326,7 @@
                             <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
                             <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
                         </select>
-                        <button onclick="deleteTask(${task.id})" class="delete-btn text-red-500 hover:text-red-700">
+                        <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -1405,34 +1373,13 @@
         // 数据导入导出
         function exportData() {
             if (!currentUser) return;
-            
-            // 导出时清理被删除的任务
-            cleanupDeletedTasksInExport();
-            
-            // 导出当前的活动任务（不包括被删除的）
-            const activeTasks = tasks.filter(task => !deletedTaskIds.has(task.id));
-            
-            const dataStr = JSON.stringify(activeTasks, null, 2);
+            const dataStr = JSON.stringify(tasks, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = `日程管理_${currentUser}_备份_${formatDate(new Date())}.json`;
+            const exportFileDefaultName = `planner_backup_${currentUser}_${formatDate(new Date())}.json`;
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
             linkElement.click();
-            
-            alert(`已导出 ${activeTasks.length} 个任务`);
-        }
-
-        // 导出时清理被删除的任务
-        function cleanupDeletedTasksInExport() {
-            // 从任务列表中移除被标记为删除的任务
-            tasks = tasks.filter(task => !deletedTaskIds.has(task.id));
-            
-            // 保存清理后的数据
-            saveData();
-            
-            // 重新渲染
-            renderAll();
         }
 
         function importData(event) {
@@ -1444,14 +1391,10 @@
                 try {
                     const importedTasks = JSON.parse(e.target.result);
                     if (Array.isArray(importedTasks)) {
-                        // 合并导入的任务，避免ID冲突
-                        const existingTaskIds = new Set(tasks.map(t => t.id));
-                        const newTasks = importedTasks.filter(task => !existingTaskIds.has(task.id));
-                        
-                        tasks = [...tasks, ...newTasks];
+                        tasks = importedTasks;
                         saveData();
                         renderAll();
-                        alert(`数据导入成功！新增了 ${newTasks.length} 个任务，共有 ${tasks.length} 个任务`);
+                        alert('数据导入成功！');
                         closeModal();
                     } else {
                         alert('文件格式无效');
@@ -1460,7 +1403,7 @@
                     alert('解析文件时出错：' + error.message);
                 }
             };
-            reader.readAsText(file);
+            reader.readAsTgitext(file);
         }
     </script>
 </body>
