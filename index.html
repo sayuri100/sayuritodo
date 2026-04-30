@@ -147,31 +147,6 @@
             background: linear-gradient(to right, #fef8f3, #fbf8f3);
             border-left-color: #a67c52;
         }
-        
-        /* 周计划概览日期选中样式 */
-        .weekday.selected {
-            background-color: #e0d6c3 !important;
-            border-color: #a67c52 !important;
-            transform: scale(1.05);
-        }
-        
-        /* 日期详情面板样式 */
-        .date-detail-panel {
-            border: 2px solid #e0d6c3;
-            background-color: #fef8f3;
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -386,21 +361,6 @@
                                 <div class="text-xs font-bold text-brown-600">日</div>
                             </div>
                             <div class="grid grid-cols-7 gap-1 md:gap-2 h-20 md:h-24" id="weekly-overview-grid"></div>
-                            
-                            <!-- 日期详情面板 -->
-                            <div id="date-detail-panel" class="mt-4 hidden">
-                                <div class="date-detail-panel p-4 rounded-lg">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <h3 class="font-bold text-brown-800" id="selected-date-title">日期详情</h3>
-                                        <button onclick="closeDateDetail()" class="text-brown-500 hover:text-brown-800 text-sm">
-                                            <i class="fas fa-times"></i> 关闭
-                                        </button>
-                                    </div>
-                                    <div id="date-tasks-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                        <!-- 日期任务将通过JS动态生成 -->
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -573,8 +533,6 @@
         let selectedDate = null;
         let allUsers = {};
         let expandedNotes = {}; // 存储展开的笔记状态
-        let selectedWeekday = null; // 存储选中的周几
-        let selectedWeekDate = null; // 存储选中的周日期
 
         // DOM 加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -1131,6 +1089,17 @@
             });
         }
 
+        function getRecentWeekTasks() {
+            const today = new Date();
+            const weekAgo = new Date(today);
+            weekAgo.setDate(today.getDate() - 7);
+            
+            return tasks.filter(task => {
+                const taskDate = new Date(task.date);
+                return taskDate >= weekAgo && taskDate <= today;
+            });
+        }
+
         function renderWeeklyOverview() {
             const gridEl = document.getElementById('weekly-overview-grid');
             gridEl.innerHTML = '';
@@ -1146,14 +1115,13 @@
                 const dayTasks = tasks.filter(t => t.date === dateStr);
                 const completed = dayTasks.filter(t => t.status === 'completed').length;
                 const isToday = dateStr === formatDate(today);
-                const isSelected = selectedWeekDate === dateStr;
                 
                 const dayEl = document.createElement('div');
-                dayEl.className = `weekday flex flex-col items-center justify-end h-full p-1 border ${isToday ? 'today border-amber-300' : 'border-transparent'} ${isSelected ? 'selected' : ''} hover:border-amber-300 cursor-pointer transition-all duration-200`;
-                dayEl.setAttribute('data-date', dateStr);
-                dayEl.setAttribute('data-weekday', ['一','二','三','四','五','六','日'][i]);
-                dayEl.setAttribute('data-day', day.getDate());
-                dayEl.onclick = () => selectWeekday(dateStr, day.getDate(), ['一','二','三','四','五','六','日'][i]);
+                dayEl.className = `flex flex-col items-center justify-end h-full p-1 border ${isToday ? 'today border-amber-300' : 'border-transparent'} hover:border-amber-300 cursor-pointer`;
+                dayEl.onclick = () => {
+                    selectedDate = dateStr;
+                    showDayTasks(dateStr, day.getDate());
+                };
                 dayEl.innerHTML = `
                     <div class="text-xs mb-1">${['一','二','三','四','五','六','日'][i]}</div>
                     <div class="text-lg font-bold mb-1">${day.getDate()}</div>
@@ -1162,83 +1130,6 @@
                 `;
                 gridEl.appendChild(dayEl);
             }
-        }
-
-        // 选择周几查看详情
-        function selectWeekday(dateStr, day, weekday) {
-            // 移除之前选中的样式
-            document.querySelectorAll('.weekday').forEach(el => {
-                el.classList.remove('selected');
-            });
-            
-            // 添加当前选中的样式
-            const selectedElement = document.querySelector(`[data-date="${dateStr}"]`);
-            if (selectedElement) {
-                selectedElement.classList.add('selected');
-            }
-            
-            selectedWeekDate = dateStr;
-            
-            // 显示日期详情面板
-            const date = new Date(dateStr);
-            const month = date.getMonth() + 1;
-            const year = date.getFullYear();
-            
-            document.getElementById('selected-date-title').textContent = `${year}年${month}月${day}日（${weekday}）`;
-            
-            // 渲染该日期的任务
-            const dayTasks = tasks.filter(t => t.date === dateStr);
-            const container = document.getElementById('date-tasks-list');
-            container.innerHTML = '';
-            
-            if (dayTasks.length === 0) {
-                container.innerHTML = '<p class="text-center text-brown-500 py-4">当日无任务</p>';
-            } else {
-                dayTasks.forEach(task => {
-                    const taskEl = document.createElement('div');
-                    taskEl.className = 'flex items-center justify-between p-3 bg-white rounded border border-amber-100 fade-in';
-                    taskEl.innerHTML = `
-                        <div>
-                            <div class="flex items-center">
-                                <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
-                                       onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
-                                       class="mr-2 h-4 w-4 text-amber-700 rounded cursor-pointer">
-                                <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
-                            </div>
-                            ${task.notes ? `<div class="text-xs text-brown-500 mt-1 ml-6">${task.notes}</div>` : ''}
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <select onchange="updateTaskStatus(${task.id}, this.value)" 
-                                    class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
-                                <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
-                                <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
-                                <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
-                            </select>
-                            <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    container.appendChild(taskEl);
-                });
-            }
-            
-            // 显示详情面板
-            document.getElementById('date-detail-panel').classList.remove('hidden');
-            
-            // 滚动到详情面板
-            document.getElementById('date-detail-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        // 关闭日期详情
-        function closeDateDetail() {
-            document.getElementById('date-detail-panel').classList.add('hidden');
-            selectedWeekDate = null;
-            
-            // 移除选中样式
-            document.querySelectorAll('.weekday').forEach(el => {
-                el.classList.remove('selected');
-            });
         }
 
         function renderCalendar() {
@@ -1403,7 +1294,7 @@
                     alert('解析文件时出错：' + error.message);
                 }
             };
-            reader.readAsTgitext(file);
+            reader.readAsText(file);
         }
     </script>
 </body>
