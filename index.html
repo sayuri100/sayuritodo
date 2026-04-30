@@ -147,6 +147,42 @@
             background: linear-gradient(to right, #fef8f3, #fbf8f3);
             border-left-color: #a67c52;
         }
+        
+        /* 周计划概览日期选中样式 */
+        .weekday.selected {
+            background-color: #e0d6c3 !important;
+            border-color: #a67c52 !important;
+            transform: scale(1.05);
+        }
+        
+        /* 日期详情面板样式 */
+        .date-detail-panel {
+            border: 2px solid #e0d6c3;
+            background-color: #fef8f3;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 删除按钮样式 */
+        .delete-btn {
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+        
+        .delete-btn:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -361,6 +397,21 @@
                                 <div class="text-xs font-bold text-brown-600">日</div>
                             </div>
                             <div class="grid grid-cols-7 gap-1 md:gap-2 h-20 md:h-24" id="weekly-overview-grid"></div>
+                            
+                            <!-- 日期详情面板 -->
+                            <div id="date-detail-panel" class="mt-4 hidden">
+                                <div class="date-detail-panel p-4 rounded-lg">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h3 class="font-bold text-brown-800" id="selected-date-title">日期详情</h3>
+                                        <button onclick="closeDateDetail()" class="text-brown-500 hover:text-brown-800 text-sm">
+                                            <i class="fas fa-times"></i> 关闭
+                                        </button>
+                                    </div>
+                                    <div id="date-tasks-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                        <!-- 日期任务将通过JS动态生成 -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -533,6 +584,9 @@
         let selectedDate = null;
         let allUsers = {};
         let expandedNotes = {}; // 存储展开的笔记状态
+        let selectedWeekday = null; // 存储选中的周几
+        let selectedWeekDate = null; // 存储选中的周日期
+        let deletedTaskIds = new Set(); // 存储已删除的任务ID，用于数据清理
 
         // DOM 加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -669,6 +723,7 @@
                 currentUser = null;
                 tasks = [];
                 expandedNotes = {};
+                deletedTaskIds.clear();
                 closeModal();
                 showAuth();
             }
@@ -799,9 +854,28 @@
 
         function deleteTask(id) {
             if (confirm('确定要删除这个任务吗？')) {
+                // 记录已删除的任务ID
+                deletedTaskIds.add(id);
+                
+                // 从任务列表中移除
                 tasks = tasks.filter(t => t.id != id);
                 saveData();
                 renderAll();
+                
+                // 清理被删除的任务的数据
+                setTimeout(() => {
+                    cleanupDeletedTasks();
+                }, 1000);
+            }
+        }
+
+        // 清理已删除的任务数据
+        function cleanupDeletedTasks() {
+            if (deletedTaskIds.size > 0) {
+                // 这里可以添加额外的清理逻辑
+                console.log(`已清理 ${deletedTaskIds.size} 个被删除的任务`);
+                // 清理完后可以清空集合
+                // deletedTaskIds.clear(); // 可以根据需要决定是否清空
             }
         }
 
@@ -889,7 +963,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <button onclick="deleteTask(${task.id})" class="ml-2 text-brown-400 hover:text-red-600">
+                                    <button onclick="deleteTask(${task.id})" class="ml-2 delete-btn text-brown-400 hover:text-red-600">
                                         <i class="fas fa-trash-alt text-sm"></i>
                                     </button>
                                 </div>
@@ -976,7 +1050,7 @@
                         </select>
                     </td>
                     <td class="px-4 py-3">
-                        <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
+                        <button onclick="deleteTask(${task.id})" class="delete-btn text-red-500 hover:text-red-700">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -1089,17 +1163,6 @@
             });
         }
 
-        function getRecentWeekTasks() {
-            const today = new Date();
-            const weekAgo = new Date(today);
-            weekAgo.setDate(today.getDate() - 7);
-            
-            return tasks.filter(task => {
-                const taskDate = new Date(task.date);
-                return taskDate >= weekAgo && taskDate <= today;
-            });
-        }
-
         function renderWeeklyOverview() {
             const gridEl = document.getElementById('weekly-overview-grid');
             gridEl.innerHTML = '';
@@ -1115,13 +1178,14 @@
                 const dayTasks = tasks.filter(t => t.date === dateStr);
                 const completed = dayTasks.filter(t => t.status === 'completed').length;
                 const isToday = dateStr === formatDate(today);
+                const isSelected = selectedWeekDate === dateStr;
                 
                 const dayEl = document.createElement('div');
-                dayEl.className = `flex flex-col items-center justify-end h-full p-1 border ${isToday ? 'today border-amber-300' : 'border-transparent'} hover:border-amber-300 cursor-pointer`;
-                dayEl.onclick = () => {
-                    selectedDate = dateStr;
-                    showDayTasks(dateStr, day.getDate());
-                };
+                dayEl.className = `weekday flex flex-col items-center justify-end h-full p-1 border ${isToday ? 'today border-amber-300' : 'border-transparent'} ${isSelected ? 'selected' : ''} hover:border-amber-300 cursor-pointer transition-all duration-200`;
+                dayEl.setAttribute('data-date', dateStr);
+                dayEl.setAttribute('data-weekday', ['一','二','三','四','五','六','日'][i]);
+                dayEl.setAttribute('data-day', day.getDate());
+                dayEl.onclick = () => selectWeekday(dateStr, day.getDate(), ['一','二','三','四','五','六','日'][i]);
                 dayEl.innerHTML = `
                     <div class="text-xs mb-1">${['一','二','三','四','五','六','日'][i]}</div>
                     <div class="text-lg font-bold mb-1">${day.getDate()}</div>
@@ -1130,6 +1194,83 @@
                 `;
                 gridEl.appendChild(dayEl);
             }
+        }
+
+        // 选择周几查看详情
+        function selectWeekday(dateStr, day, weekday) {
+            // 移除之前选中的样式
+            document.querySelectorAll('.weekday').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 添加当前选中的样式
+            const selectedElement = document.querySelector(`[data-date="${dateStr}"]`);
+            if (selectedElement) {
+                selectedElement.classList.add('selected');
+            }
+            
+            selectedWeekDate = dateStr;
+            
+            // 显示日期详情面板
+            const date = new Date(dateStr);
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            
+            document.getElementById('selected-date-title').textContent = `${year}年${month}月${day}日（${weekday}）`;
+            
+            // 渲染该日期的任务
+            const dayTasks = tasks.filter(t => t.date === dateStr);
+            const container = document.getElementById('date-tasks-list');
+            container.innerHTML = '';
+            
+            if (dayTasks.length === 0) {
+                container.innerHTML = '<p class="text-center text-brown-500 py-4">当日无任务</p>';
+            } else {
+                dayTasks.forEach(task => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = 'flex items-center justify-between p-3 bg-white rounded border border-amber-100 fade-in';
+                    taskEl.innerHTML = `
+                        <div>
+                            <div class="flex items-center">
+                                <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
+                                       onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
+                                       class="mr-2 h-4 w-4 text-amber-700 rounded cursor-pointer">
+                                <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
+                            </div>
+                            ${task.notes ? `<div class="text-xs text-brown-500 mt-1 ml-6">${task.notes}</div>` : ''}
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select onchange="updateTaskStatus(${task.id}, this.value)" 
+                                    class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                                <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
+                                <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
+                                <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
+                            </select>
+                            <button onclick="deleteTask(${task.id})" class="delete-btn text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(taskEl);
+                });
+            }
+            
+            // 显示详情面板
+            document.getElementById('date-detail-panel').classList.remove('hidden');
+            
+            // 滚动到详情面板
+            document.getElementById('date-detail-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 关闭日期详情
+        function closeDateDetail() {
+            document.getElementById('date-detail-panel').classList.add('hidden');
+            selectedWeekDate = null;
+            
+            // 移除选中样式
+            document.querySelectorAll('.weekday').forEach(el => {
+                el.classList.remove('selected');
+            });
         }
 
         function renderCalendar() {
@@ -1217,7 +1358,7 @@
                             <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
                             <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
                         </select>
-                        <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
+                        <button onclick="deleteTask(${task.id})" class="delete-btn text-red-500 hover:text-red-700">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -1264,13 +1405,34 @@
         // 数据导入导出
         function exportData() {
             if (!currentUser) return;
-            const dataStr = JSON.stringify(tasks, null, 2);
+            
+            // 导出时清理被删除的任务
+            cleanupDeletedTasksInExport();
+            
+            // 导出当前的活动任务（不包括被删除的）
+            const activeTasks = tasks.filter(task => !deletedTaskIds.has(task.id));
+            
+            const dataStr = JSON.stringify(activeTasks, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = `planner_backup_${currentUser}_${formatDate(new Date())}.json`;
+            const exportFileDefaultName = `日程管理_${currentUser}_备份_${formatDate(new Date())}.json`;
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
             linkElement.click();
+            
+            alert(`已导出 ${activeTasks.length} 个任务`);
+        }
+
+        // 导出时清理被删除的任务
+        function cleanupDeletedTasksInExport() {
+            // 从任务列表中移除被标记为删除的任务
+            tasks = tasks.filter(task => !deletedTaskIds.has(task.id));
+            
+            // 保存清理后的数据
+            saveData();
+            
+            // 重新渲染
+            renderAll();
         }
 
         function importData(event) {
@@ -1282,10 +1444,14 @@
                 try {
                     const importedTasks = JSON.parse(e.target.result);
                     if (Array.isArray(importedTasks)) {
-                        tasks = importedTasks;
+                        // 合并导入的任务，避免ID冲突
+                        const existingTaskIds = new Set(tasks.map(t => t.id));
+                        const newTasks = importedTasks.filter(task => !existingTaskIds.has(task.id));
+                        
+                        tasks = [...tasks, ...newTasks];
                         saveData();
                         renderAll();
-                        alert('数据导入成功！');
+                        alert(`数据导入成功！新增了 ${newTasks.length} 个任务，共有 ${tasks.length} 个任务`);
                         closeModal();
                     } else {
                         alert('文件格式无效');
