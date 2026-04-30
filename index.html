@@ -71,15 +71,65 @@
             scroll-behavior: smooth;
         }
         
-        /* 页面切换动画 */
-        .page-content {
-            transition: opacity 0.3s ease;
-        }
-        
         /* 高亮当天日期 */
         .today {
             background-color: #fef3c7 !important;
             border-color: #f59e0b !important;
+        }
+        
+        /* 任务样式 */
+        .task-item {
+            transition: all 0.3s ease;
+        }
+        
+        .task-item.completed {
+            background-color: #f7faf7;
+        }
+        
+        .task-item.inprogress {
+            background-color: #fef8f3;
+        }
+        
+        .notes-toggle {
+            cursor: pointer;
+            color: #8b7355;
+            font-size: 0.8rem;
+        }
+        
+        .notes-toggle:hover {
+            color: #5a7d5a;
+        }
+        
+        .task-notes {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .task-notes.expanded {
+            max-height: 200px;
+        }
+        
+        /* 快速添加任务区域 */
+        .quick-add-container {
+            background-color: #fef8f3;
+            border: 2px solid #e0d6c3;
+            border-radius: 8px;
+        }
+        
+        /* 优先级标签 */
+        .priority-high { border-left: 3px solid #e53e3e; }
+        .priority-medium { border-left: 3px solid #d69e2e; }
+        .priority-low { border-left: 3px solid #38a169; }
+        
+        /* 复选框样式 */
+        input[type="checkbox"] {
+            accent-color: #5a7d5a;
+        }
+        
+        /* 动画效果 */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
         }
     </style>
 </head>
@@ -223,18 +273,68 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- 左侧主内容区 -->
                     <div class="lg:col-span-2 space-y-6">
-                        <!-- 今日任务列表 -->
+                        <!-- 快速添加任务区域（移到上方） -->
+                        <div class="quick-add-container p-4 md:p-6">
+                            <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800 mb-4">
+                                <i class="fas fa-plus-circle mr-2 text-amber-700"></i>快速添加任务
+                            </h2>
+                            <div class="space-y-3">
+                                <input type="text" id="quick-task-input" placeholder="请输入任务描述..." 
+                                       class="w-full p-3 border border-brown-300 rounded bg-amber-50 text-base">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-bold mb-1 text-brown-700">状态</label>
+                                        <select id="quick-task-status" class="w-full p-3 border border-brown-300 rounded bg-amber-50">
+                                            <option value="pending">未开始</option>
+                                            <option value="inprogress">进行中</option>
+                                            <option value="completed">已完成</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold mb-1 text-brown-700">日期</label>
+                                        <input type="date" id="quick-task-date" 
+                                               class="w-full p-3 border border-brown-300 rounded bg-amber-50"
+                                               value="<?php echo date('Y-m-d'); ?>">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold mb-1 text-brown-700">优先级</label>
+                                    <select id="quick-task-priority" class="w-full p-3 border border-brown-300 rounded bg-amber-50">
+                                        <option value="low">低优先级</option>
+                                        <option value="medium" selected>中优先级</option>
+                                        <option value="high">高优先级</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold mb-1 text-brown-700">备注（可选）</label>
+                                    <textarea id="quick-task-notes" placeholder="添加备注..." 
+                                              class="w-full p-3 border border-brown-300 rounded bg-amber-50 text-sm" rows="2"></textarea>
+                                </div>
+                                <button onclick="quickAddTask()" 
+                                        class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 px-4 rounded transition duration-300 text-base">
+                                    <i class="fas fa-plus mr-2"></i> 添加任务
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 今日任务清单 -->
                         <div class="paper-bg p-4 md:p-6 relative">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800"><i class="fas fa-tasks mr-2 text-amber-700"></i>今日任务清单</h2>
-                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">今日焦点</span>
+                                <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800">
+                                    <i class="fas fa-tasks mr-2 text-amber-700"></i>今日任务清单
+                                </h2>
+                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full" id="today-task-count">0个任务</span>
                             </div>
-                            <div class="space-y-3" id="task-list"></div>
+                            <div class="space-y-3" id="task-list">
+                                <!-- 任务将通过JS动态生成 -->
+                            </div>
                         </div>
 
                         <!-- 周计划概览 -->
                         <div class="paper-bg p-4 md:p-6 relative">
-                            <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800 mb-4"><i class="fas fa-calendar-week mr-2 text-amber-700"></i>周计划概览</h2>
+                            <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800 mb-4">
+                                <i class="fas fa-calendar-week mr-2 text-amber-700"></i>周计划概览
+                            </h2>
                             <div class="grid grid-cols-7 gap-1 md:gap-2 text-center mb-4">
                                 <div class="text-xs font-bold text-brown-600">一</div>
                                 <div class="text-xs font-bold text-brown-600">二</div>
@@ -268,33 +368,17 @@
 
                         <!-- 甘特图 -->
                         <div class="paper-bg p-4 md:p-6">
-                            <h3 class="text-sm font-bold text-brown-800 mb-3"><i class="fas fa-chart-bar mr-2 text-amber-700"></i>进度甘特图</h3>
+                            <h3 class="text-sm font-bold text-brown-800 mb-3">
+                                <i class="fas fa-chart-bar mr-2 text-amber-700"></i>进度甘特图
+                            </h3>
                             <div class="chart-container" id="gantt-chart">
                                 <!-- 甘特图将在这里生成 -->
                             </div>
                         </div>
 
-                        <!-- 快速添加 -->
-                        <div class="paper-bg p-4 md:p-6">
-                            <h3 class="text-sm font-bold text-brown-800 mb-3">快速添加任务</h3>
-                            <input type="text" id="quick-task-input" placeholder="任务描述..." class="w-full p-2 mb-2 border border-brown-300 rounded bg-amber-50 text-sm">
-                            <div class="flex space-x-2 mb-2">
-                                <select id="quick-task-status" class="flex-1 p-2 border border-brown-300 rounded bg-amber-50 text-sm">
-                                    <option value="pending">未开始</option>
-                                    <option value="inprogress">进行中</option>
-                                    <option value="completed">已完成</option>
-                                </select>
-                                <input type="date" id="quick-task-date" class="p-2 border border-brown-300 rounded bg-amber-50 text-sm" 
-                                       value="<?php echo date('Y-m-d'); ?>">
-                            </div>
-                            <button onclick="quickAddTask()" class="w-full bg-amber-700 hover:bg-amber-800 text-white py-1.5 px-3 rounded text-sm transition duration-300">
-                                <i class="fas fa-plus mr-1"></i> 添加任务
-                            </button>
-                        </div>
-
                         <!-- 快速统计 -->
                         <div class="paper-bg p-4 md:p-6">
-                            <h3 class="text-sm font-bold text-brown-800 mb-3">任务统计</h3>
+                            <h3 class="text-sm font-bold text-brown-800 mb-3">今日任务统计</h3>
                             <div class="space-y-2">
                                 <div class="flex justify-between">
                                     <span class="text-brown-600">总计：</span>
@@ -311,6 +395,12 @@
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">未开始：</span>
                                     <span class="font-bold" id="pending-tasks">0</span>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-amber-200">
+                                    <div class="flex justify-between">
+                                        <span class="text-brown-600">本周进度：</span>
+                                        <span class="font-bold" id="weekly-progress">0%</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -345,8 +435,9 @@
                                 <tr>
                                     <th class="px-4 py-3">任务</th>
                                     <th class="px-4 py-3">日期</th>
+                                    <th class="px-4 py-3">优先级</th>
                                     <th class="px-4 py-3">状态</th>
-                                    <th class="px-4 py-3">进度</th>
+                                    <th class="px-4 py-3">备注</th>
                                     <th class="px-4 py-3">操作</th>
                                 </tr>
                             </thead>
@@ -426,6 +517,7 @@
         let currentYear = new Date().getFullYear();
         let selectedDate = null;
         let allUsers = {};
+        let expandedNotes = {}; // 存储展开的笔记状态
 
         // DOM 加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -561,6 +653,7 @@
                 localStorage.removeItem('planner_current_user');
                 currentUser = null;
                 tasks = [];
+                expandedNotes = {};
                 closeModal();
                 showAuth();
             }
@@ -598,13 +691,42 @@
                     // 为新用户初始化一些示例数据
                     const today = new Date();
                     tasks = [
-                        { id: Date.now() + 1, text: '完成项目提案', date: formatDate(today), status: 'completed', progress: 100 },
-                        { id: Date.now() + 2, text: '团队会议', date: formatDate(addDays(today, 1)), status: 'inprogress', progress: 50 },
-                        { id: Date.now() + 3, text: '购买生活用品', date: formatDate(addDays(today, 2)), status: 'pending', progress: 0 },
-                        { id: Date.now() + 4, text: '阅读书籍第三章', date: formatDate(addDays(today, 3)), status: 'pending', progress: 0 },
-                        { id: Date.now() + 5, text: '准备演示文稿', date: formatDate(today), status: 'inprogress', progress: 30 },
-                        { id: Date.now() + 6, text: '户外跑步', date: formatDate(addDays(today, 5)), status: 'pending', progress: 0 },
-                        { id: Date.now() + 7, text: '检查周报告', date: formatDate(addDays(today, 6)), status: 'pending', progress: 0 },
+                        { 
+                            id: Date.now() + 1, 
+                            text: '完成项目提案', 
+                            date: formatDate(today), 
+                            status: 'completed', 
+                            priority: 'high',
+                            notes: '需要包含预算和时间安排',
+                            progress: 100 
+                        },
+                        { 
+                            id: Date.now() + 2, 
+                            text: '团队会议', 
+                            date: formatDate(today), 
+                            status: 'inprogress', 
+                            priority: 'medium',
+                            notes: '讨论季度目标',
+                            progress: 50 
+                        },
+                        { 
+                            id: Date.now() + 3, 
+                            text: '购买生活用品', 
+                            date: formatDate(today), 
+                            status: 'pending', 
+                            priority: 'low',
+                            notes: '牛奶、面包、水果',
+                            progress: 0 
+                        },
+                        { 
+                            id: Date.now() + 4, 
+                            text: '阅读书籍第三章', 
+                            date: formatDate(addDays(today, 1)), 
+                            status: 'pending', 
+                            priority: 'medium',
+                            notes: '',
+                            progress: 0 
+                        },
                     ];
                     saveData();
                 }
@@ -616,6 +738,8 @@
             const text = document.getElementById('quick-task-input').value;
             const status = document.getElementById('quick-task-status').value;
             const date = document.getElementById('quick-task-date').value;
+            const priority = document.getElementById('quick-task-priority').value;
+            const notes = document.getElementById('quick-task-notes').value;
             
             if (text && date) {
                 const newTask = {
@@ -623,13 +747,18 @@
                     text: text,
                     date: date,
                     status: status,
+                    priority: priority,
+                    notes: notes || '',
                     progress: status === 'completed' ? 100 : status === 'inprogress' ? 50 : 0
                 };
                 tasks.push(newTask);
                 document.getElementById('quick-task-input').value = '';
-                document.getElementById('quick-task-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('quick-task-notes').value = '';
                 saveData();
                 renderAll();
+                
+                // 滚动到任务列表
+                document.getElementById('task-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
             } else {
                 alert('请填写任务描述和日期');
             }
@@ -645,11 +774,32 @@
             }
         }
 
+        function updateTaskNotes(id, notes) {
+            const task = tasks.find(t => t.id == id);
+            if (task) {
+                task.notes = notes;
+                saveData();
+            }
+        }
+
         function deleteTask(id) {
             if (confirm('确定要删除这个任务吗？')) {
                 tasks = tasks.filter(t => t.id != id);
                 saveData();
                 renderAll();
+            }
+        }
+
+        // 切换笔记展开状态
+        function toggleNotes(taskId) {
+            expandedNotes[taskId] = !expandedNotes[taskId];
+            const notesElement = document.getElementById(`notes-${taskId}`);
+            if (notesElement) {
+                if (expandedNotes[taskId]) {
+                    notesElement.classList.add('expanded');
+                } else {
+                    notesElement.classList.remove('expanded');
+                }
             }
         }
 
@@ -676,33 +826,69 @@
 
         function renderTaskList() {
             const listEl = document.getElementById('task-list');
+            const todayTaskCount = document.getElementById('today-task-count');
             listEl.innerHTML = '';
             
             const today = formatDate(new Date());
             const todayTasks = tasks.filter(t => t.date === today);
             
+            // 更新任务计数
+            todayTaskCount.textContent = `${todayTasks.length}个任务`;
+            
             if (todayTasks.length === 0) {
-                listEl.innerHTML = '<p class="text-center text-brown-500 py-4">今日无任务，添加一些吧！</p>';
+                listEl.innerHTML = `
+                    <div class="text-center py-8 text-brown-500">
+                        <i class="fas fa-clipboard-check text-3xl mb-2"></i>
+                        <p>今日无任务，请添加新任务</p>
+                    </div>`;
                 return;
             }
             
             todayTasks.forEach(task => {
+                const priorityClass = `priority-${task.priority}`;
+                const isExpanded = expandedNotes[task.id] || false;
+                
                 const taskEl = document.createElement('div');
-                taskEl.className = 'flex items-center justify-between p-3 bg-amber-50 rounded border border-amber-200 hover:bg-amber-100 transition';
+                taskEl.className = `task-item ${priorityClass} p-3 bg-amber-50 rounded border border-amber-200 hover:bg-amber-100 transition fade-in`;
                 taskEl.innerHTML = `
-                    <div class="flex items-center">
-                        <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
-                               onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
-                               class="mr-3 h-5 w-5 text-amber-700 rounded cursor-pointer">
-                        <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
-                    </div>
-                    <div class="flex items-center">
-                        <select onchange="updateTaskStatus(${task.id}, this.value)" 
-                                class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
-                            <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
-                            <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
-                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
-                        </select>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start flex-1">
+                            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
+                                   onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
+                                   class="mt-1 mr-3 h-5 w-5 text-amber-700 rounded cursor-pointer">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800 font-medium'}">
+                                        ${task.text}
+                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <select onchange="updateTaskStatus(${task.id}, this.value)" 
+                                                class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                                            <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
+                                            <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
+                                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
+                                        </select>
+                                        <span class="text-xs text-brown-500">
+                                            ${task.priority === 'high' ? '🔥' : task.priority === 'medium' ? '⚡' : '🌱'}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                ${task.notes ? `
+                                <div class="mt-2">
+                                    <div class="notes-toggle flex items-center text-xs mb-1" onclick="toggleNotes(${task.id})">
+                                        <i class="fas fa-${isExpanded ? 'chevron-up' : 'chevron-down'} mr-1"></i>
+                                        <span>备注</span>
+                                    </div>
+                                    <div id="notes-${task.id}" class="task-notes ${isExpanded ? 'expanded' : ''}">
+                                        <div class="bg-amber-100 p-2 rounded text-sm text-brown-700">
+                                            ${task.notes}
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
                         <button onclick="deleteTask(${task.id})" class="ml-2 text-brown-400 hover:text-red-600">
                             <i class="fas fa-trash-alt text-sm"></i>
                         </button>
@@ -722,7 +908,8 @@
             // 应用搜索
             if (searchTerm) {
                 filteredTasks = tasks.filter(task => 
-                    task.text.toLowerCase().includes(searchTerm.toLowerCase())
+                    task.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (task.notes && task.notes.toLowerCase().includes(searchTerm.toLowerCase()))
                 );
             }
             
@@ -744,10 +931,26 @@
             
             filteredTasks.forEach(task => {
                 const row = document.createElement('tr');
-                row.className = 'bg-white border-b hover:bg-amber-50';
+                row.className = 'bg-white border-b hover:bg-amber-50 fade-in';
                 row.innerHTML = `
-                    <td class="px-4 py-3">${task.text}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
+                                   onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
+                                   class="mr-2 h-4 w-4 text-amber-700 rounded cursor-pointer">
+                            ${task.text}
+                        </div>
+                    </td>
                     <td class="px-4 py-3">${formatDisplayDate(task.date)}</td>
+                    <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-1 rounded ${
+                            task.priority === 'high' ? 'bg-red-100 text-red-800' : 
+                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-green-100 text-green-800'
+                        }">
+                            ${task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
+                        </span>
+                    </td>
                     <td class="px-4 py-3">
                         <select onchange="updateTaskStatus(${task.id}, this.value)" 
                                 class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
@@ -757,9 +960,11 @@
                         </select>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-amber-600 h-2 rounded-full" style="width: ${task.progress}%"></div>
+                        ${task.notes ? `
+                        <div class="text-xs text-brown-600 max-w-xs truncate" title="${task.notes}">
+                            ${task.notes}
                         </div>
+                        ` : '<span class="text-gray-400 text-xs">-</span>'}
                     </td>
                     <td class="px-4 py-3">
                         <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
@@ -778,6 +983,8 @@
             const rate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             
             document.getElementById('completion-rate').textContent = `${rate}%`;
+            document.getElementById('weekly-progress').textContent = `${rate}%`;
+            
             const circle = document.getElementById('completion-circle');
             const circumference = 2 * Math.PI * 15.9155;
             const offset = circumference - (rate / 100) * circumference;
@@ -788,7 +995,7 @@
         function getThisWeekTasks() {
             const today = new Date();
             const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setDate(today.getDate() - today.getDay() + 1); // 周一为一周的开始
             
             const weekTasks = [];
             for (let i = 0; i < 7; i++) {
@@ -803,10 +1010,13 @@
         }
 
         function renderTaskStats() {
-            const total = tasks.length;
-            const completed = tasks.filter(t => t.status === 'completed').length;
-            const inprogress = tasks.filter(t => t.status === 'inprogress').length;
-            const pending = tasks.filter(t => t.status === 'pending').length;
+            const today = formatDate(new Date());
+            const todayTasks = tasks.filter(t => t.date === today);
+            
+            const total = todayTasks.length;
+            const completed = todayTasks.filter(t => t.status === 'completed').length;
+            const inprogress = todayTasks.filter(t => t.status === 'inprogress').length;
+            const pending = todayTasks.filter(t => t.status === 'pending').length;
             
             document.getElementById('total-tasks').textContent = total;
             document.getElementById('completed-tasks').textContent = completed;
@@ -838,8 +1048,11 @@
                 }
             });
             
+            // 按日期排序
+            const sortedDates = Object.keys(dayProgress).sort();
+            
             // 创建甘特图柱子
-            Object.keys(dayProgress).sort().forEach(date => {
+            sortedDates.forEach(date => {
                 const { total, completed } = dayProgress[date];
                 const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
                 
@@ -856,6 +1069,12 @@
                 } else {
                     bar.style.backgroundColor = '#c5b8a0'; // 灰色
                 }
+                
+                // 添加日期标签
+                const dateText = document.createElement('div');
+                dateText.className = 'absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-brown-600 whitespace-nowrap';
+                dateText.textContent = new Date(date).getDate();
+                bar.appendChild(dateText);
                 
                 chartEl.appendChild(bar);
             });
@@ -878,7 +1097,7 @@
             
             const today = new Date();
             const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setDate(today.getDate() - today.getDay() + 1); // 周一为一周的开始
             
             for (let i = 0; i < 7; i++) {
                 const day = new Date(startOfWeek);
@@ -971,11 +1190,16 @@
             
             dayTasks.forEach(task => {
                 const taskEl = document.createElement('div');
-                taskEl.className = 'flex items-center justify-between p-3 bg-white rounded border border-amber-100';
+                taskEl.className = 'flex items-center justify-between p-3 bg-white rounded border border-amber-100 fade-in';
                 taskEl.innerHTML = `
                     <div>
-                        <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
-                        <div class="text-xs text-brown-500 mt-1">${getStatusText(task.status)}</div>
+                        <div class="flex items-center">
+                            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
+                                   onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
+                                   class="mr-2 h-4 w-4 text-amber-700 rounded cursor-pointer">
+                            <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
+                        </div>
+                        ${task.notes ? `<div class="text-xs text-brown-500 mt-1 ml-6">${task.notes}</div>` : ''}
                     </div>
                     <div class="flex items-center space-x-2">
                         <select onchange="updateTaskStatus(${task.id}, this.value)" 
@@ -1006,6 +1230,11 @@
         function getStatusText(status) {
             const statusMap = { 'pending': '未开始', 'inprogress': '进行中', 'completed': '已完成' };
             return statusMap[status] || status;
+        }
+
+        function getPriorityText(priority) {
+            const priorityMap = { 'high': '高', 'medium': '中', 'low': '低' };
+            return priorityMap[priority] || priority;
         }
 
         function addDays(date, days) {
