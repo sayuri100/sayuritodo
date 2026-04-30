@@ -30,7 +30,6 @@
             border: 1px dashed #d4c8b0;
             pointer-events: none;
         }
-        .torn-edge { clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%); }
         
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1ebe0; }
@@ -65,14 +64,28 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .page { display: none; }
-        .page.active { display: block; }
         .hidden { display: none !important; }
+        
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* 页面切换动画 */
+        .page-content {
+            transition: opacity 0.3s ease;
+        }
+        
+        /* 高亮当天日期 */
+        .today {
+            background-color: #fef3c7 !important;
+            border-color: #f59e0b !important;
+        }
     </style>
 </head>
 <body class="min-h-screen">
-    <!-- 登录页面 -->
-    <div id="login-page" class="login-container min-h-screen flex items-center justify-center p-4">
+    <!-- 登录/注册选择页面 -->
+    <div id="auth-page" class="login-container min-h-screen flex items-center justify-center p-4">
         <div class="paper-bg max-w-md w-full p-8 relative">
             <div class="absolute -top-2 -right-2 text-yellow-900 opacity-20 text-4xl"><i class="fas fa-key"></i></div>
             <div class="absolute -bottom-2 -left-2 text-yellow-900 opacity-20 text-4xl"><i class="fas fa-music"></i></div>
@@ -82,22 +95,89 @@
                 <p class="text-brown-600 italic">您的高效规划，从此刻开始</p>
                 <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
             </div>
+            
+            <div class="space-y-4">
+                <button onclick="showLogin()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 px-4 rounded transition duration-300">
+                    <i class="fas fa-sign-in-alt mr-2"></i> 登录
+                </button>
+                <button onclick="showRegister()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded transition duration-300">
+                    <i class="fas fa-user-plus mr-2"></i> 注册
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录页面 -->
+    <div id="login-page" class="login-container min-h-screen hidden items-center justify-center p-4">
+        <div class="paper-bg max-w-md w-full p-8 relative">
+            <button onclick="showAuth()" class="absolute top-4 left-4 text-brown-600 hover:text-brown-900">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            
+            <div class="text-center mb-8">
+                <h2 class="heading-font text-3xl font-bold text-brown-800 mb-2">用户登录</h2>
+                <p class="text-brown-600">请输入您的账户信息</p>
+                <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+            </div>
 
             <form id="login-form">
                 <div class="mb-4">
-                    <label class="block text-sm font-bold mb-2" for="username">用户名</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="text" id="username" placeholder="请输入用户名" required>
+                    <label class="block text-sm font-bold mb-2" for="login-username">用户名</label>
+                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" 
+                           type="text" id="login-username" placeholder="请输入用户名" required>
                 </div>
                 <div class="mb-6">
-                    <label class="block text-sm font-bold mb-2" for="password">密码</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="password" id="password" placeholder="请输入密码" required>
+                    <label class="block text-sm font-bold mb-2" for="login-password">密码</label>
+                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" 
+                           type="password" id="login-password" placeholder="请输入密码" required>
                 </div>
                 <div class="flex items-center justify-between">
                     <button class="bg-amber-700 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" type="submit">
-                        进入规划
+                        登录
                     </button>
-                    <button type="button" onclick="showModal()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">
-                        导入数据
+                    <button type="button" onclick="showRegister()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">
+                        没有账户？注册
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 注册页面 -->
+    <div id="register-page" class="login-container min-h-screen hidden items-center justify-center p-4">
+        <div class="paper-bg max-w-md w-full p-8 relative">
+            <button onclick="showAuth()" class="absolute top-4 left-4 text-brown-600 hover:text-brown-900">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            
+            <div class="text-center mb-8">
+                <h2 class="heading-font text-3xl font-bold text-brown-800 mb-2">用户注册</h2>
+                <p class="text-brown-600">创建您的新账户</p>
+                <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+            </div>
+
+            <form id="register-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2" for="register-username">用户名</label>
+                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" 
+                           type="text" id="register-username" placeholder="请输入用户名" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2" for="register-email">邮箱</label>
+                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" 
+                           type="email" id="register-email" placeholder="请输入邮箱" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold mb-2" for="register-password">密码</label>
+                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" 
+                           type="password" id="register-password" placeholder="请输入密码" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" type="submit">
+                        注册
+                    </button>
+                    <button type="button" onclick="showLogin()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">
+                        已有账户？登录
                     </button>
                 </div>
             </form>
@@ -105,79 +185,160 @@
     </div>
 
     <!-- 主应用页面 -->
-    <div id="app-page" class="hidden container mx-auto p-4 md:p-8">
+    <div id="app-page" class="hidden">
         <!-- 头部导航 -->
-        <header class="paper-bg p-6 mb-6 relative overflow-hidden">
+        <header class="paper-bg p-4 md:p-6 mb-6 sticky top-0 z-10">
             <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h1 class="heading-font text-3xl md:text-4xl font-bold text-brown-900">复古日程效率监督</h1>
-                    <p class="text-brown-700" id="current-date">2024年1月1日 星期一</p>
+                    <h1 class="heading-font text-2xl md:text-4xl font-bold text-brown-900">复古日程效率监督</h1>
+                    <p class="text-brown-700 text-sm md:text-base" id="current-date">2024年1月1日 星期一</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right">
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <div class="text-right hidden md:block">
                         <p class="text-sm text-brown-600">欢迎回来，</p>
                         <p class="font-bold text-brown-800" id="welcome-user">用户</p>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-bold border-2 border-amber-400">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-bold border-2 border-amber-400">
                         <i class="fas fa-user"></i>
                     </div>
                     <button onclick="showModal()" class="text-brown-600 hover:text-brown-900" title="数据管理">
-                        <i class="fas fa-file-export text-xl"></i>
+                        <i class="fas fa-cog text-lg md:text-xl"></i>
                     </button>
                 </div>
             </div>
             
             <!-- 导航标签 -->
             <nav class="border-b border-brown-300">
-                <ul class="flex space-x-8">
-                    <li><a href="#" onclick="showPage('dashboard'); return false;" class="tab-link active pb-2 border-b-2 border-amber-700 text-amber-800 font-bold">仪表盘</a></li>
-                    <li><a href="#" onclick="showPage('tasks'); return false;" class="tab-link pb-2 text-brown-600 hover:text-amber-700">任务管理</a></li>
-                    <li><a href="#" onclick="showPage('calendar'); return false;" class="tab-link pb-2 text-brown-600 hover:text-amber-700">日历视图</a></li>
+                <ul class="flex space-x-4 md:space-x-8 overflow-x-auto">
+                    <li><a href="#dashboard" onclick="showPage('dashboard'); return false;" class="tab-link pb-2 border-b-2 border-amber-700 text-amber-800 font-bold whitespace-nowrap">仪表盘</a></li>
+                    <li><a href="#tasks" onclick="showPage('tasks'); return false;" class="tab-link pb-2 text-brown-600 hover:text-amber-700 whitespace-nowrap">任务管理</a></li>
+                    <li><a href="#calendar" onclick="showPage('calendar'); return false;" class="tab-link pb-2 text-brown-600 hover:text-amber-700 whitespace-nowrap">日历视图</a></li>
                 </ul>
             </nav>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 左侧主内容区 -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- 今日任务列表 -->
-                <div id="dashboard-tasks" class="page active paper-bg p-6 relative">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="heading-font text-xl font-bold text-brown-800"><i class="fas fa-tasks mr-2 text-amber-700"></i>今日任务清单</h2>
-                        <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">今日焦点</span>
+        <div class="container mx-auto p-4 md:p-8">
+            <!-- 仪表盘页面 -->
+            <div id="dashboard" class="page-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 左侧主内容区 -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- 今日任务列表 -->
+                        <div class="paper-bg p-4 md:p-6 relative">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800"><i class="fas fa-tasks mr-2 text-amber-700"></i>今日任务清单</h2>
+                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">今日焦点</span>
+                            </div>
+                            <div class="space-y-3" id="task-list"></div>
+                        </div>
+
+                        <!-- 周计划概览 -->
+                        <div class="paper-bg p-4 md:p-6 relative">
+                            <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800 mb-4"><i class="fas fa-calendar-week mr-2 text-amber-700"></i>周计划概览</h2>
+                            <div class="grid grid-cols-7 gap-1 md:gap-2 text-center mb-4">
+                                <div class="text-xs font-bold text-brown-600">一</div>
+                                <div class="text-xs font-bold text-brown-600">二</div>
+                                <div class="text-xs font-bold text-brown-600">三</div>
+                                <div class="text-xs font-bold text-brown-600">四</div>
+                                <div class="text-xs font-bold text-brown-600">五</div>
+                                <div class="text-xs font-bold text-brown-600">六</div>
+                                <div class="text-xs font-bold text-brown-600">日</div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 md:gap-2 h-20 md:h-24" id="weekly-overview-grid"></div>
+                        </div>
                     </div>
-                    <div class="space-y-3" id="task-list"></div>
-                    <div class="mt-4 flex space-x-2">
-                        <input type="text" id="new-task-input" placeholder="添加新任务..." class="flex-1 p-2 border border-brown-300 rounded bg-amber-50">
-                        <select id="new-task-status" class="p-2 border border-brown-300 rounded bg-amber-50">
-                            <option value="pending">未开始</option>
-                            <option value="inprogress">进行中</option>
-                            <option value="completed">已完成</option>
-                        </select>
-                        <button onclick="addTask()" class="bg-amber-700 hover:bg-amber-800 text-white py-2 px-4 rounded transition duration-300">
-                            <i class="fas fa-plus"></i> 添加
-                        </button>
+
+                    <!-- 右侧侧边栏 -->
+                    <div class="space-y-6">
+                        <!-- 完成率统计 -->
+                        <div class="paper-bg p-4 md:p-6 text-center relative">
+                            <div class="absolute top-2 right-2 text-brown-300"><i class="fas fa-stopwatch"></i></div>
+                            <h3 class="text-sm text-brown-600 mb-1">本周完成率</h3>
+                            <div class="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-2">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e0d6c3" stroke-width="2"></circle>
+                                    <circle id="completion-circle" cx="18" cy="18" r="15.9155" fill="none" stroke="#5a7d5a" stroke-width="2" stroke-dasharray="54 100" stroke-linecap="round"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-xl md:text-2xl font-bold text-brown-800" id="completion-rate">0%</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-brown-500">本周已完成任务</p>
+                        </div>
+
+                        <!-- 甘特图 -->
+                        <div class="paper-bg p-4 md:p-6">
+                            <h3 class="text-sm font-bold text-brown-800 mb-3"><i class="fas fa-chart-bar mr-2 text-amber-700"></i>进度甘特图</h3>
+                            <div class="chart-container" id="gantt-chart">
+                                <!-- 甘特图将在这里生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 快速添加 -->
+                        <div class="paper-bg p-4 md:p-6">
+                            <h3 class="text-sm font-bold text-brown-800 mb-3">快速添加任务</h3>
+                            <input type="text" id="quick-task-input" placeholder="任务描述..." class="w-full p-2 mb-2 border border-brown-300 rounded bg-amber-50 text-sm">
+                            <div class="flex space-x-2 mb-2">
+                                <select id="quick-task-status" class="flex-1 p-2 border border-brown-300 rounded bg-amber-50 text-sm">
+                                    <option value="pending">未开始</option>
+                                    <option value="inprogress">进行中</option>
+                                    <option value="completed">已完成</option>
+                                </select>
+                                <input type="date" id="quick-task-date" class="p-2 border border-brown-300 rounded bg-amber-50 text-sm" 
+                                       value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                            <button onclick="quickAddTask()" class="w-full bg-amber-700 hover:bg-amber-800 text-white py-1.5 px-3 rounded text-sm transition duration-300">
+                                <i class="fas fa-plus mr-1"></i> 添加任务
+                            </button>
+                        </div>
+
+                        <!-- 快速统计 -->
+                        <div class="paper-bg p-4 md:p-6">
+                            <h3 class="text-sm font-bold text-brown-800 mb-3">任务统计</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-brown-600">总计：</span>
+                                    <span class="font-bold" id="total-tasks">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-green-600">已完成：</span>
+                                    <span class="font-bold" id="completed-tasks">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-yellow-600">进行中：</span>
+                                    <span class="font-bold" id="inprogress-tasks">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">未开始：</span>
+                                    <span class="font-bold" id="pending-tasks">0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 周计划概览 -->
-                <div id="dashboard-weekly" class="page active paper-bg p-6 relative">
-                    <h2 class="heading-font text-xl font-bold text-brown-800 mb-4"><i class="fas fa-calendar-week mr-2 text-amber-700"></i>周计划概览</h2>
-                    <div class="grid grid-cols-7 gap-2 text-center mb-4">
-                        <div class="text-xs font-bold text-brown-600">周一</div>
-                        <div class="text-xs font-bold text-brown-600">周二</div>
-                        <div class="text-xs font-bold text-brown-600">周三</div>
-                        <div class="text-xs font-bold text-brown-600">周四</div>
-                        <div class="text-xs font-bold text-brown-600">周五</div>
-                        <div class="text-xs font-bold text-brown-600">周六</div>
-                        <div class="text-xs font-bold text-brown-600">周日</div>
+            <!-- 任务管理页面 -->
+            <div id="tasks" class="page-content hidden">
+                <div class="paper-bg p-4 md:p-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                        <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800 mb-4 md:mb-0">
+                            <i class="fas fa-list-check mr-2 text-amber-700"></i>所有任务
+                        </h2>
+                        <div class="flex space-x-2">
+                            <input type="text" id="task-search" placeholder="搜索任务..." 
+                                   class="p-2 border border-brown-300 rounded bg-amber-50 text-sm w-full md:w-auto"
+                                   onkeyup="searchTasks()">
+                            <select id="task-filter" onchange="filterTasks()" 
+                                    class="p-2 border border-brown-300 rounded bg-amber-50 text-sm">
+                                <option value="all">全部状态</option>
+                                <option value="pending">未开始</option>
+                                <option value="inprogress">进行中</option>
+                                <option value="completed">已完成</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-7 gap-2 h-24" id="weekly-overview-grid"></div>
-                </div>
-
-                <!-- 任务管理页面 -->
-                <div id="tasks-page" class="page hidden paper-bg p-6">
-                    <h2 class="heading-font text-xl font-bold text-brown-800 mb-4"><i class="fas fa-list-check mr-2 text-amber-700"></i>所有任务</h2>
+                    
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-brown-700">
                             <thead class="text-xs text-brown-700 bg-amber-50">
@@ -192,17 +353,26 @@
                             <tbody id="all-tasks-list"></tbody>
                         </table>
                     </div>
+                    
+                    <div id="no-tasks-message" class="text-center py-8 text-brown-500 hidden">
+                        <i class="fas fa-tasks text-3xl mb-2"></i>
+                        <p>暂无任务，请添加新任务</p>
+                    </div>
                 </div>
+            </div>
 
-                <!-- 日历视图页面 -->
-                <div id="calendar-page" class="page hidden paper-bg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="heading-font text-xl font-bold text-brown-800"><i class="fas fa-calendar-alt mr-2 text-amber-700"></i>月历视图</h2>
-                        <div class="flex space-x-2">
+            <!-- 日历视图页面 -->
+            <div id="calendar" class="page-content hidden">
+                <div class="paper-bg p-4 md:p-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                        <h2 class="heading-font text-lg md:text-xl font-bold text-brown-800 mb-4 md:mb-0">
+                            <i class="fas fa-calendar-alt mr-2 text-amber-700"></i>月历视图
+                        </h2>
+                        <div class="flex items-center space-x-2">
                             <button onclick="changeMonth(-1)" class="px-3 py-1 bg-amber-100 text-amber-800 rounded hover:bg-amber-200">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
-                            <span id="month-year-header" class="font-bold text-brown-800 px-4">2024年1月</span>
+                            <span id="month-year-header" class="font-bold text-brown-800 px-4 text-center">2024年1月</span>
                             <button onclick="changeMonth(1)" class="px-3 py-1 bg-amber-100 text-amber-800 rounded hover:bg-amber-200">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
@@ -212,73 +382,11 @@
                     <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-brown-600 mb-2">
                         <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
                     </div>
-                    <div class="grid grid-cols-7 gap-1 text-center" id="calendar-grid"></div>
+                    <div class="grid grid-cols-7 gap-1 text-center mb-6" id="calendar-grid"></div>
                     
                     <div class="mt-6 p-4 bg-amber-50 rounded border border-amber-200">
-                        <h3 class="font-bold text-brown-800 mb-2">当日任务</h3>
-                        <div id="day-tasks-list"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 右侧侧边栏 -->
-            <div class="space-y-6">
-                <!-- 完成率统计 -->
-                <div class="paper-bg p-6 text-center relative">
-                    <div class="absolute top-2 right-2 text-brown-300"><i class="fas fa-stopwatch"></i></div>
-                    <h3 class="text-sm text-brown-600 mb-1">本周完成率</h3>
-                    <div class="relative w-32 h-32 mx-auto mb-2">
-                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e0d6c3" stroke-width="2"></circle>
-                            <circle id="completion-circle" cx="18" cy="18" r="15.9155" fill="none" stroke="#5a7d5a" stroke-width="2" stroke-dasharray="54 100" stroke-linecap="round"></circle>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-2xl font-bold text-brown-800" id="completion-rate">85%</span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-brown-500">本周已完成任务</p>
-                </div>
-
-                <!-- 甘特图 -->
-                <div class="paper-bg p-6">
-                    <h3 class="text-sm font-bold text-brown-800 mb-3"><i class="fas fa-chart-bar mr-2 text-amber-700"></i>进度甘特图</h3>
-                    <div class="chart-container" id="gantt-chart"></div>
-                </div>
-
-                <!-- 快速统计 -->
-                <div class="paper-bg p-6">
-                    <h3 class="text-sm font-bold text-brown-800 mb-3">任务统计</h3>
-                    <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-brown-600">总计：</span>
-                            <span class="font-bold" id="total-tasks">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-green-600">已完成：</span>
-                            <span class="font-bold" id="completed-tasks">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-yellow-600">进行中：</span>
-                            <span class="font-bold" id="inprogress-tasks">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">未开始：</span>
-                            <span class="font-bold" id="pending-tasks">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 快捷添加 -->
-                <div class="paper-bg p-6">
-                    <h3 class="text-sm font-bold text-brown-800 mb-3">快速添加</h3>
-                    <input type="text" id="quick-task-input" placeholder="任务描述..." class="w-full p-2 mb-2 border border-brown-300 rounded bg-amber-50 text-sm">
-                    <div class="flex space-x-2">
-                        <select id="quick-task-status" class="flex-1 p-2 border border-brown-300 rounded bg-amber-50 text-sm">
-                            <option value="pending">未开始</option>
-                            <option value="inprogress">进行中</option>
-                            <option value="completed">已完成</option>
-                        </select>
-                        <button onclick="quickAddTask()" class="bg-amber-700 hover:bg-amber-800 text-white py-1.5 px-3 rounded text-sm transition duration-300">添加</button>
+                        <h3 class="font-bold text-brown-800 mb-2" id="selected-day-title">选择日期查看任务</h3>
+                        <div id="day-tasks-list" class="space-y-2"></div>
                     </div>
                 </div>
             </div>
@@ -317,31 +425,77 @@
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         let selectedDate = null;
+        let allUsers = {};
 
         // DOM 加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
+            // 加载所有用户信息
+            const savedUsers = localStorage.getItem('planner_all_users');
+            if (savedUsers) {
+                allUsers = JSON.parse(savedUsers);
+            }
+            
+            // 检查是否已登录
             const savedUser = localStorage.getItem('planner_current_user');
             if (savedUser) {
                 currentUser = savedUser;
                 loadData();
                 showApp();
             } else {
-                showLogin();
+                showAuth();
             }
 
             // 登录表单提交
             document.getElementById('login-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
                 
                 if (username && password) {
-                    currentUser = username;
-                    localStorage.setItem('planner_current_user', currentUser);
-                    loadData();
-                    showApp();
+                    if (allUsers[username] && allUsers[username].password === password) {
+                        currentUser = username;
+                        localStorage.setItem('planner_current_user', currentUser);
+                        loadData();
+                        showApp();
+                    } else {
+                        alert('用户名或密码错误！');
+                    }
                 } else {
                     alert('请输入用户名和密码');
+                }
+            });
+
+            // 注册表单提交
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                
+                if (username && email && password) {
+                    if (allUsers[username]) {
+                        alert('用户名已存在！');
+                        return;
+                    }
+                    
+                    allUsers[username] = {
+                        email: email,
+                        password: password,
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('planner_all_users', JSON.stringify(allUsers));
+                    
+                    currentUser = username;
+                    localStorage.setItem('planner_current_user', currentUser);
+                    
+                    // 为新用户初始化空任务列表
+                    tasks = [];
+                    saveData();
+                    
+                    showApp();
+                } else {
+                    alert('请填写所有字段');
                 }
             });
 
@@ -349,28 +503,56 @@
             setInterval(updateDateTime, 60000);
         });
 
-        // 显示/隐藏页面
-        function showLogin() {
-            document.getElementById('login-page').classList.remove('hidden');
+        // 显示/隐藏页面函数
+        function showAuth() {
+            document.getElementById('auth-page').classList.remove('hidden');
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
             document.getElementById('app-page').classList.add('hidden');
         }
 
-        function showApp() {
+        function showLogin() {
+            document.getElementById('auth-page').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('register-page').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('auth-page').classList.add('hidden');
             document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.remove('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('auth-page').classList.add('hidden');
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
             document.getElementById('app-page').classList.remove('hidden');
             updateWelcomeMessage();
             renderAll();
         }
 
         function showPage(page) {
-            document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // 显示选中的页面
+            document.getElementById(page).classList.remove('hidden');
+            
+            // 更新标签样式
             document.querySelectorAll('.tab-link').forEach(link => {
-                link.classList.remove('active', 'border-b-2', 'border-amber-700', 'text-amber-800');
+                link.classList.remove('border-b-2', 'border-amber-700', 'text-amber-800', 'font-bold');
                 link.classList.add('text-brown-600');
             });
             
-            document.getElementById(`${page}-page`).classList.remove('hidden');
-            event.target.classList.add('active', 'border-b-2', 'border-amber-700', 'text-amber-800');
+            // 高亮当前标签
+            document.querySelector(`a[href="#${page}"]`).classList.add('border-b-2', 'border-amber-700', 'text-amber-800', 'font-bold');
+            document.querySelector(`a[href="#${page}"]`).classList.remove('text-brown-600');
+            
+            // 滚动到页面顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // 登出功能
@@ -380,7 +562,7 @@
                 currentUser = null;
                 tasks = [];
                 closeModal();
-                showLogin();
+                showAuth();
             }
         }
 
@@ -413,15 +595,16 @@
                 if (savedData) {
                     tasks = JSON.parse(savedData);
                 } else {
-                    // 初始化示例数据
+                    // 为新用户初始化一些示例数据
+                    const today = new Date();
                     tasks = [
-                        { id: 1, text: '完成项目提案', date: formatDate(new Date()), status: 'completed', progress: 100 },
-                        { id: 2, text: '上午10点团队会议', date: formatDate(addDays(new Date(), 1)), status: 'inprogress', progress: 50 },
-                        { id: 3, text: '购买生活用品', date: formatDate(addDays(new Date(), 2)), status: 'pending', progress: 0 },
-                        { id: 4, text: '阅读书籍第三章', date: formatDate(addDays(new Date(), 3)), status: 'pending', progress: 0 },
-                        { id: 5, text: '准备演示文稿', date: formatDate(new Date()), status: 'inprogress', progress: 30 },
-                        { id: 6, text: '户外跑步30分钟', date: formatDate(addDays(new Date(), 5)), status: 'pending', progress: 0 },
-                        { id: 7, text: '检查周报告', date: formatDate(addDays(new Date(), 6)), status: 'pending', progress: 0 },
+                        { id: Date.now() + 1, text: '完成项目提案', date: formatDate(today), status: 'completed', progress: 100 },
+                        { id: Date.now() + 2, text: '团队会议', date: formatDate(addDays(today, 1)), status: 'inprogress', progress: 50 },
+                        { id: Date.now() + 3, text: '购买生活用品', date: formatDate(addDays(today, 2)), status: 'pending', progress: 0 },
+                        { id: Date.now() + 4, text: '阅读书籍第三章', date: formatDate(addDays(today, 3)), status: 'pending', progress: 0 },
+                        { id: Date.now() + 5, text: '准备演示文稿', date: formatDate(today), status: 'inprogress', progress: 30 },
+                        { id: Date.now() + 6, text: '户外跑步', date: formatDate(addDays(today, 5)), status: 'pending', progress: 0 },
+                        { id: Date.now() + 7, text: '检查周报告', date: formatDate(addDays(today, 6)), status: 'pending', progress: 0 },
                     ];
                     saveData();
                 }
@@ -429,44 +612,31 @@
         }
 
         // 任务操作
-        function addTask() {
-            const text = document.getElementById('new-task-input').value;
-            const status = document.getElementById('new-task-status').value;
-            if (text) {
-                const newTask = {
-                    id: Date.now(),
-                    text: text,
-                    date: formatDate(new Date()),
-                    status: status,
-                    progress: status === 'completed' ? 100 : status === 'inprogress' ? 50 : 0
-                };
-                tasks.push(newTask);
-                document.getElementById('new-task-input').value = '';
-                saveData();
-                renderAll();
-            }
-        }
-
         function quickAddTask() {
             const text = document.getElementById('quick-task-input').value;
             const status = document.getElementById('quick-task-status').value;
-            if (text) {
+            const date = document.getElementById('quick-task-date').value;
+            
+            if (text && date) {
                 const newTask = {
                     id: Date.now(),
                     text: text,
-                    date: formatDate(new Date()),
+                    date: date,
                     status: status,
                     progress: status === 'completed' ? 100 : status === 'inprogress' ? 50 : 0
                 };
                 tasks.push(newTask);
                 document.getElementById('quick-task-input').value = '';
+                document.getElementById('quick-task-date').value = new Date().toISOString().split('T')[0];
                 saveData();
                 renderAll();
+            } else {
+                alert('请填写任务描述和日期');
             }
         }
 
         function updateTaskStatus(id, newStatus) {
-            const task = tasks.find(t => t.id === id);
+            const task = tasks.find(t => t.id == id);
             if (task) {
                 task.status = newStatus;
                 task.progress = newStatus === 'completed' ? 100 : newStatus === 'inprogress' ? 50 : 0;
@@ -477,10 +647,20 @@
 
         function deleteTask(id) {
             if (confirm('确定要删除这个任务吗？')) {
-                tasks = tasks.filter(t => t.id !== id);
+                tasks = tasks.filter(t => t.id != id);
                 saveData();
                 renderAll();
             }
+        }
+
+        // 搜索和筛选
+        function searchTasks() {
+            const searchTerm = document.getElementById('task-search').value.toLowerCase();
+            renderAllTasks(searchTerm);
+        }
+
+        function filterTasks() {
+            renderAllTasks();
         }
 
         // 渲染函数
@@ -511,30 +691,66 @@
                 taskEl.className = 'flex items-center justify-between p-3 bg-amber-50 rounded border border-amber-200 hover:bg-amber-100 transition';
                 taskEl.innerHTML = `
                     <div class="flex items-center">
-                        <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" class="mr-3 h-5 w-5 text-amber-700 rounded">
-                        <span class="${task.status === 'completed' ? 'line-through text-brown-400' : ''}">${task.text}</span>
+                        <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} 
+                               onchange="updateTaskStatus(${task.id}, '${task.status === 'completed' ? 'pending' : 'completed'}')" 
+                               class="mr-3 h-5 w-5 text-amber-700 rounded cursor-pointer">
+                        <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
                     </div>
                     <div class="flex items-center">
-                        <span class="tag-${task.status} text-xs px-2 py-1 rounded mr-2">${getStatusText(task.status)}</span>
-                        <button onclick="deleteTask(${task.id})" class="text-brown-400 hover:text-red-600"><i class="fas fa-trash-alt text-sm"></i></button>
+                        <select onchange="updateTaskStatus(${task.id}, this.value)" 
+                                class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                            <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
+                            <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
+                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
+                        </select>
+                        <button onclick="deleteTask(${task.id})" class="ml-2 text-brown-400 hover:text-red-600">
+                            <i class="fas fa-trash-alt text-sm"></i>
+                        </button>
                     </div>
                 `;
                 listEl.appendChild(taskEl);
             });
         }
 
-        function renderAllTasks() {
+        function renderAllTasks(searchTerm = '') {
             const listEl = document.getElementById('all-tasks-list');
+            const noTasksMsg = document.getElementById('no-tasks-message');
             listEl.innerHTML = '';
             
-            tasks.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(task => {
+            let filteredTasks = tasks;
+            
+            // 应用搜索
+            if (searchTerm) {
+                filteredTasks = tasks.filter(task => 
+                    task.text.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            
+            // 应用状态筛选
+            const filterStatus = document.getElementById('task-filter').value;
+            if (filterStatus !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.status === filterStatus);
+            }
+            
+            // 按日期排序
+            filteredTasks.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (filteredTasks.length === 0) {
+                noTasksMsg.classList.remove('hidden');
+                return;
+            }
+            
+            noTasksMsg.classList.add('hidden');
+            
+            filteredTasks.forEach(task => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-amber-50';
                 row.innerHTML = `
                     <td class="px-4 py-3">${task.text}</td>
                     <td class="px-4 py-3">${formatDisplayDate(task.date)}</td>
                     <td class="px-4 py-3">
-                        <select onchange="updateTaskStatus(${task.id}, this.value)" class="tag-${task.status} text-xs px-2 py-1 rounded border-0">
+                        <select onchange="updateTaskStatus(${task.id}, this.value)" 
+                                class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
                             <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
                             <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
                             <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
@@ -556,8 +772,9 @@
         }
 
         function renderCompletionRate() {
-            const completedTasks = tasks.filter(t => t.status === 'completed').length;
-            const totalTasks = tasks.length;
+            const thisWeekTasks = getThisWeekTasks();
+            const completedTasks = thisWeekTasks.filter(t => t.status === 'completed').length;
+            const totalTasks = thisWeekTasks.length;
             const rate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             
             document.getElementById('completion-rate').textContent = `${rate}%`;
@@ -566,6 +783,23 @@
             const offset = circumference - (rate / 100) * circumference;
             circle.style.strokeDasharray = `${circumference} ${circumference}`;
             circle.style.strokeDashoffset = offset;
+        }
+
+        function getThisWeekTasks() {
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            
+            const weekTasks = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                const dateStr = formatDate(date);
+                const dayTasks = tasks.filter(t => t.date === dateStr);
+                weekTasks.push(...dayTasks);
+            }
+            
+            return weekTasks;
         }
 
         function renderTaskStats() {
@@ -584,14 +818,57 @@
             const chartEl = document.getElementById('gantt-chart');
             chartEl.innerHTML = '';
             
-            const recentTasks = tasks.slice(0, 5);
+            // 获取最近7天的任务
+            const recentTasks = getRecentWeekTasks();
+            
+            if (recentTasks.length === 0) {
+                chartEl.innerHTML = '<p class="text-center text-brown-500 py-4">暂无任务数据</p>';
+                return;
+            }
+            
+            // 计算每天的任务进度
+            const dayProgress = {};
             recentTasks.forEach(task => {
+                if (!dayProgress[task.date]) {
+                    dayProgress[task.date] = { total: 0, completed: 0 };
+                }
+                dayProgress[task.date].total++;
+                if (task.status === 'completed') {
+                    dayProgress[task.date].completed++;
+                }
+            });
+            
+            // 创建甘特图柱子
+            Object.keys(dayProgress).sort().forEach(date => {
+                const { total, completed } = dayProgress[date];
+                const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+                
                 const bar = document.createElement('div');
                 bar.className = 'bar';
-                bar.style.height = `${task.progress}%`;
-                bar.title = `${task.text} - ${task.progress}%`;
-                bar.style.backgroundColor = task.status === 'completed' ? '#5a7d5a' : task.status === 'inprogress' ? '#a67c52' : '#c5b8a0';
+                bar.style.height = `${progress}%`;
+                bar.title = `${formatDisplayDate(date)}: ${completed}/${total} 完成 (${progress}%)`;
+                
+                // 根据进度设置颜色
+                if (progress >= 80) {
+                    bar.style.backgroundColor = '#5a7d5a'; // 绿色
+                } else if (progress >= 50) {
+                    bar.style.backgroundColor = '#a67c52'; // 橙色
+                } else {
+                    bar.style.backgroundColor = '#c5b8a0'; // 灰色
+                }
+                
                 chartEl.appendChild(bar);
+            });
+        }
+
+        function getRecentWeekTasks() {
+            const today = new Date();
+            const weekAgo = new Date(today);
+            weekAgo.setDate(today.getDate() - 7);
+            
+            return tasks.filter(task => {
+                const taskDate = new Date(task.date);
+                return taskDate >= weekAgo && taskDate <= today;
             });
         }
 
@@ -609,13 +886,18 @@
                 const dateStr = formatDate(day);
                 const dayTasks = tasks.filter(t => t.date === dateStr);
                 const completed = dayTasks.filter(t => t.status === 'completed').length;
+                const isToday = dateStr === formatDate(today);
                 
                 const dayEl = document.createElement('div');
-                dayEl.className = 'flex flex-col items-center justify-end h-full p-1 border border-transparent hover:border-amber-300 cursor-pointer';
+                dayEl.className = `flex flex-col items-center justify-end h-full p-1 border ${isToday ? 'today border-amber-300' : 'border-transparent'} hover:border-amber-300 cursor-pointer`;
+                dayEl.onclick = () => {
+                    selectedDate = dateStr;
+                    showDayTasks(dateStr, day.getDate());
+                };
                 dayEl.innerHTML = `
                     <div class="text-xs mb-1">${['一','二','三','四','五','六','日'][i]}</div>
-                    <div class="text-lg font-bold mb-1 ${dateStr === formatDate(today) ? 'text-amber-700' : ''}">${day.getDate()}</div>
-                    ${completed > 0 ? `<div class="w-4 h-4 rounded-full bg-green-600 mb-1"></div>` : ''}
+                    <div class="text-lg font-bold mb-1">${day.getDate()}</div>
+                    ${completed > 0 ? `<div class="w-3 h-3 md:w-4 md:h-4 rounded-full bg-green-600 mb-1"></div>` : ''}
                     <div class="text-[10px] text-brown-500">${completed}/${dayTasks.length}</div>
                 `;
                 gridEl.appendChild(dayEl);
@@ -634,12 +916,14 @@
             
             monthYearHeader.textContent = `${currentYear}年${currentMonth + 1}月`;
             
+            // 填充空白
             for (let i = 0; i < startDay; i++) {
                 const emptyDiv = document.createElement('div');
                 emptyDiv.className = 'p-2 border border-transparent';
                 calendarGrid.appendChild(emptyDiv);
             }
             
+            // 填充日期
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dayTasks = tasks.filter(t => t.date === dateStr);
@@ -647,7 +931,7 @@
                 const isToday = dateStr === formatDate(new Date());
                 
                 const dayDiv = document.createElement('div');
-                dayDiv.className = `p-2 border ${isToday ? 'border-amber-500 bg-amber-50' : 'border-amber-100'} h-12 flex flex-col items-center justify-start cursor-pointer hover:bg-amber-50`;
+                dayDiv.className = `p-2 border ${isToday ? 'today border-amber-300' : 'border-amber-100'} h-12 flex flex-col items-center justify-start cursor-pointer hover:bg-amber-50`;
                 dayDiv.innerHTML = `
                     <div class="text-sm font-bold ${isToday ? 'text-amber-700' : ''}">${day}</div>
                     ${completed > 0 ? `<div class="w-2 h-2 rounded-full bg-green-600 mt-1"></div>` : ''}
@@ -673,20 +957,37 @@
             selectedDate = dateStr;
             const dayTasks = tasks.filter(t => t.date === dateStr);
             const container = document.getElementById('day-tasks-list');
+            const title = document.getElementById('selected-day-title');
             
-            container.innerHTML = `<p class="text-sm text-brown-600 mb-2">${currentYear}年${currentMonth + 1}月${day}日</p>`;
+            const date = new Date(dateStr);
+            title.textContent = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 任务`;
+            
+            container.innerHTML = '';
             
             if (dayTasks.length === 0) {
-                container.innerHTML += '<p class="text-center text-brown-500 py-4">当日无任务</p>';
+                container.innerHTML = '<p class="text-center text-brown-500 py-4">当日无任务</p>';
                 return;
             }
             
             dayTasks.forEach(task => {
                 const taskEl = document.createElement('div');
-                taskEl.className = 'flex items-center justify-between p-2 mb-2 bg-white rounded border';
+                taskEl.className = 'flex items-center justify-between p-3 bg-white rounded border border-amber-100';
                 taskEl.innerHTML = `
-                    <span class="${task.status === 'completed' ? 'line-through' : ''}">${task.text}</span>
-                    <span class="tag-${task.status} text-xs px-2 py-1 rounded">${getStatusText(task.status)}</span>
+                    <div>
+                        <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800'}">${task.text}</span>
+                        <div class="text-xs text-brown-500 mt-1">${getStatusText(task.status)}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <select onchange="updateTaskStatus(${task.id}, this.value)" 
+                                class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                            <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
+                            <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
+                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>已完成</option>
+                        </select>
+                        <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 `;
                 container.appendChild(taskEl);
             });
@@ -713,7 +1014,7 @@
             return result;
         }
 
-        // 数据导入导出
+        // 模态框功能
         function showModal() {
             document.getElementById('data-modal').classList.remove('hidden');
         }
@@ -722,6 +1023,7 @@
             document.getElementById('data-modal').classList.add('hidden');
         }
 
+        // 数据导入导出
         function exportData() {
             if (!currentUser) return;
             const dataStr = JSON.stringify(tasks, null, 2);
