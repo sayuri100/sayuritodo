@@ -52,7 +52,14 @@
             transition: height 0.3s ease;
             border-radius: 2px 2px 0 0;
         }
-        .login-container { animation: fadeIn 1s ease-out; }
+        .login-container { 
+            animation: fadeIn 1s ease-out; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -86,85 +93,114 @@
         .today-task-item { background: linear-gradient(to right, #fef8f3, #fbf8f3); border-left: 4px solid #d69e2e; }
         .today-task-item.completed { background: linear-gradient(to right, #f7faf7, #fbf8f3); border-left-color: #5a7d5a; }
         .today-task-item.inprogress { background: linear-gradient(to right, #fef8f3, #fbf8f3); border-left-color: #a67c52; }
+        /* 登录/注册页面居中修复 */
+        .auth-page-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 优先级选择器样式 */
+        .priority-selector {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: transparent;
+            border: 1px solid #e0d6c3;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+        }
+        .priority-selector.high { background-color: #fee; color: #c53030; }
+        .priority-selector.medium { background-color: #fefcbf; color: #975a16; }
+        .priority-selector.low { background-color: #c6f6d5; color: #22543d; }
     </style>
 </head>
 <body class="min-h-screen">
     <!-- 登录/注册选择页面 -->
-    <div id="auth-page" class="login-container min-h-screen flex items-center justify-center p-4">
-        <div class="paper-bg max-w-md w-full p-8 relative">
-            <div class="absolute -top-2 -right-2 text-yellow-900 opacity-20 text-4xl"><i class="fas fa-key"></i></div>
-            <div class="absolute -bottom-2 -left-2 text-yellow-900 opacity-20 text-4xl"><i class="fas fa-music"></i></div>
-            <div class="text-center mb-8">
-                <h1 class="heading-font text-4xl font-bold text-brown-800 mb-2">日程效率管理</h1>
-                <p class="text-brown-600 italic">您的高效规划，从此刻开始</p>
-                <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
-            </div>
-            <div class="space-y-4">
-                <button onclick="showLogin()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 px-4 rounded transition duration-300">
-                    <i class="fas fa-sign-in-alt mr-2"></i>登录
-                </button>
-                <button onclick="showRegister()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded transition duration-300">
-                    <i class="fas fa-user-plus mr-2"></i>注册
-                </button>
+    <div id="auth-page" class="login-container">
+        <div class="auth-page-container">
+            <div class="paper-bg max-w-md w-full p-8 relative mx-auto">
+                <div class="absolute -top-2 -right-2 text-yellow-900 opacity-20 text-4xl"><i class="fas fa-key"></i></div>
+                <div class="absolute -bottom-2 -left-2 text-yellow-900 opacity-20 text-4xl"><i class="fas fa-music"></i></div>
+                <div class="text-center mb-8">
+                    <h1 class="heading-font text-4xl font-bold text-brown-800 mb-2">日程效率管理</h1>
+                    <p class="text-brown-600 italic">您的高效规划，从此刻开始</p>
+                    <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+                </div>
+                <div class="space-y-4">
+                    <button onclick="showLogin()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 px-4 rounded transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>登录
+                    </button>
+                    <button onclick="showRegister()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded transition duration-300">
+                        <i class="fas fa-user-plus mr-2"></i>注册
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     <!-- 登录页面 -->
-    <div id="login-page" class="login-container min-h-screen hidden items-center justify-center p-4">
-        <div class="paper-bg max-w-md w-full p-8 relative">
-            <button onclick="showAuth()" class="absolute top-4 left-4 text-brown-600 hover:text-brown-900">
-                <i class="fas fa-arrow-left"></i> 返回
-            </button>
-            <div class="text-center mb-8">
-                <h2 class="heading-font text-3xl font-bold text-brown-800 mb-2">用户登录</h2>
-                <p class="text-brown-600">请输入您的账户信息</p>
-                <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+    <div id="login-page" class="login-container hidden">
+        <div class="auth-page-container">
+            <div class="paper-bg max-w-md w-full p-8 relative mx-auto">
+                <button onclick="showAuth()" class="absolute top-4 left-4 text-brown-600 hover:text-brown-900">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </button>
+                <div class="text-center mb-8">
+                    <h2 class="heading-font text-3xl font-bold text-brown-800 mb-2">用户登录</h2>
+                    <p class="text-brown-600">请输入您的账户信息</p>
+                    <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+                </div>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold mb-2" for="login-username">用户名</label>
+                        <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="text" id="login-username" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold mb-2" for="login-password">密码</label>
+                        <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="password" id="login-password" placeholder="请输入密码" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button class="bg-amber-700 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" type="submit">登录</button>
+                        <button type="button" onclick="showRegister()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">没有账户？注册</button>
+                    </div>
+                </form>
             </div>
-            <form id="login-form">
-                <div class="mb-4">
-                    <label class="block text-sm font-bold mb-2" for="login-username">用户名</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="text" id="login-username" placeholder="请输入用户名" required>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-bold mb-2" for="login-password">密码</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="password" id="login-password" placeholder="请输入密码" required>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-amber-700 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" type="submit">登录</button>
-                    <button type="button" onclick="showRegister()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">没有账户？注册</button>
-                </div>
-            </form>
         </div>
     </div>
     <!-- 注册页面 -->
-    <div id="register-page" class="login-container min-h-screen hidden items-center justify-center p-4">
-        <div class="paper-bg max-w-md w-full p-8 relative">
-            <button onclick="showAuth()" class="absolute top-4 left-4 text-brown-600 hover:text-brown-900">
-                <i class="fas fa-arrow-left"></i> 返回
-            </button>
-            <div class="text-center mb-8">
-                <h2 class="heading-font text-3xl font-bold text-brown-800 mb-2">用户注册</h2>
-                <p class="text-brown-600">创建您的新账户</p>
-                <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+    <div id="register-page" class="login-container hidden">
+        <div class="auth-page-container">
+            <div class="paper-bg max-w-md w-full p-8 relative mx-auto">
+                <button onclick="showAuth()" class="absolute top-4 left-4 text-brown-600 hover:text-brown-900">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </button>
+                <div class="text-center mb-8">
+                    <h2 class="heading-font text-3xl font-bold text-brown-800 mb-2">用户注册</h2>
+                    <p class="text-brown-600">创建您的新账户</p>
+                    <div class="w-16 h-1 bg-amber-700 mx-auto my-4"></div>
+                </div>
+                <form id="register-form">
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold mb-2" for="register-username">用户名</label>
+                        <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="text" id="register-username" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold mb-2" for="register-email">邮箱</label>
+                        <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="email" id="register-email" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold mb-2" for="register-password">密码</label>
+                        <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="password" id="register-password" placeholder="请输入密码" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" type="submit">注册</button>
+                        <button type="button" onclick="showLogin()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">已有账户？登录</button>
+                    </div>
+                </form>
             </div>
-            <form id="register-form">
-                <div class="mb-4">
-                    <label class="block text-sm font-bold mb-2" for="register-username">用户名</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="text" id="register-username" placeholder="请输入用户名" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-bold mb-2" for="register-email">邮箱</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="email" id="register-email" placeholder="请输入邮箱" required>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-bold mb-2" for="register-password">密码</label>
-                    <input class="w-full p-2 border border-brown-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50" type="password" id="register-password" placeholder="请输入密码" required>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" type="submit">注册</button>
-                    <button type="button" onclick="showLogin()" class="inline-block align-baseline font-bold text-sm text-amber-700 hover:text-amber-900">已有账户？登录</button>
-                </div>
-            </form>
         </div>
     </div>
     <!-- 主应用页面 -->
@@ -642,6 +678,17 @@
                 alert('请填写任务描述和日期');
             }
         }
+        
+        // 修复bug 2：新增更新任务优先级的函数
+        function updateTaskPriority(id, newPriority) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.priority = newPriority;
+                saveData();
+                renderAll();
+            }
+        }
+        
         function updateTaskStatus(id, newStatus) {
             const task = tasks.find(t => t.id === id);
             if (task) {
@@ -651,6 +698,7 @@
                 renderAll();
             }
         }
+        
         function updateTaskNotes(id, notes) {
             const task = tasks.find(t => t.id === id);
             if (task) {
@@ -658,6 +706,7 @@
                 saveData();
             }
         }
+        
         function deleteTask(id) {
             if (confirm('确定要删除这个任务吗？')) {
                 // 记录已删除的任务ID
@@ -728,7 +777,11 @@
                                     <div>
                                         <span class="${task.status === 'completed' ? 'line-through text-brown-400' : 'text-brown-800 font-medium'}">${task.text}</span>
                                         <div class="flex items-center space-x-2 mt-1">
-                                            <span class="text-xs ${task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'}">${task.priority === 'high' ? '高优先级' : task.priority === 'medium' ? '中优先级' : '低优先级'}</span>
+                                            <select onchange="updateTaskPriority(${task.id}, this.value)" class="priority-selector ${task.priority} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                                                <option value="low" ${task.priority === 'low' ? 'selected' : ''}>低优先级</option>
+                                                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>中优先级</option>
+                                                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>高优先级</option>
+                                            </select>
                                             <select onchange="updateTaskStatus(${task.id}, this.value)" class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
                                                 <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
                                                 <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
@@ -755,6 +808,8 @@
                 listEl.appendChild(taskEl);
             });
         }
+        
+        // 修复bug 2：修改renderAllTasks函数，使优先级可编辑
         function renderAllTasks(searchTerm = '') {
             const listEl = document.getElementById('all-tasks-list');
             const noTasksMsg = document.getElementById('no-tasks-message');
@@ -788,7 +843,12 @@
                     </td>
                     <td class="px-4 py-3">${formatDisplayDate(task.date)}</td>
                     <td class="px-4 py-3">
-                        <span class="text-xs px-2 py-1 rounded ${task.priority === 'high' ? 'bg-red-100 text-red-800' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">${task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}</span>
+                        <!-- 修改：将静态标签改为可编辑的选择器 -->
+                        <select onchange="updateTaskPriority(${task.id}, this.value)" class="priority-selector ${task.priority} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>低</option>
+                            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>中</option>
+                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>高</option>
+                        </select>
                     </td>
                     <td class="px-4 py-3">
                         <select onchange="updateTaskStatus(${task.id}, this.value)" class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
@@ -804,6 +864,7 @@
                 listEl.appendChild(row);
             });
         }
+        
         function renderCompletionRate() {
             const thisWeekTasks = getThisWeekTasks();
             const completedTasks = thisWeekTasks.filter(t => t.status === 'completed').length;
@@ -996,6 +1057,11 @@
                         ${task.notes ? `<div class="text-xs text-brown-500 mt-1 ml-6">${task.notes}</div>` : ''}
                     </div>
                     <div class="flex items-center space-x-2">
+                        <select onchange="updateTaskPriority(${task.id}, this.value)" class="priority-selector ${task.priority} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>低</option>
+                            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>中</option>
+                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>高</option>
+                        </select>
                         <select onchange="updateTaskStatus(${task.id}, this.value)" class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
                             <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
                             <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
@@ -1076,6 +1142,11 @@
                         ${task.notes ? `<div class="text-xs text-brown-500 mt-1 ml-6">${task.notes}</div>` : ''}
                     </div>
                     <div class="flex items-center space-x-2">
+                        <select onchange="updateTaskPriority(${task.id}, this.value)" class="priority-selector ${task.priority} text-xs px-2 py-1 rounded border-0 cursor-pointer">
+                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>低</option>
+                            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>中</option>
+                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>高</option>
+                        </select>
                         <select onchange="updateTaskStatus(${task.id}, this.value)" class="tag-${task.status} text-xs px-2 py-1 rounded border-0 cursor-pointer">
                             <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>未开始</option>
                             <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>进行中</option>
