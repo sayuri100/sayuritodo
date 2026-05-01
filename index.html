@@ -505,7 +505,7 @@
             <h3 class="heading-font text-lg font-bold mb-4">数据管理</h3>
             <p class="text-sm text-brown-600 mb-4">您的数据存储在本地浏览器中。导出数据以备份，导入以恢复。</p>
             <div class="space-y-3">
-                <button onclick="exportData()" class="w-full bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center">
+                <button onclick="exportCleanData()" class="w-full bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center">
                     <i class="fas fa-download mr-2"></i> 导出数据 (JSON)
                 </button>
                 <div class="flex space-x-2">
@@ -533,6 +533,7 @@
         let selectedDate = null;
         let allUsers = {};
         let expandedNotes = {}; // 存储展开的笔记状态
+        let deletedTasks = []; // 存储已删除的任务ID
 
         // DOM 加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -540,6 +541,12 @@
             const savedUsers = localStorage.getItem('planner_all_users');
             if (savedUsers) {
                 allUsers = JSON.parse(savedUsers);
+            }
+            
+            // 加载已删除的任务记录
+            const savedDeletedTasks = localStorage.getItem(`planner_deleted_${currentUser}`);
+            if (savedDeletedTasks) {
+                deletedTasks = JSON.parse(savedDeletedTasks);
             }
             
             // 检查是否已登录
@@ -598,6 +605,7 @@
                     
                     // 为新用户初始化空任务列表
                     tasks = [];
+                    deletedTasks = [];
                     saveData();
                     
                     showApp();
@@ -694,6 +702,7 @@
         function saveData() {
             if (currentUser) {
                 localStorage.setItem(`planner_data_${currentUser}`, JSON.stringify(tasks));
+                localStorage.setItem(`planner_deleted_${currentUser}`, JSON.stringify(deletedTasks));
             }
         }
 
@@ -705,11 +714,13 @@
                 } else {
                     // 为新用户初始化一些示例数据
                     const today = new Date();
+                    const todayStr = formatDate(today);
+                    
                     tasks = [
                         { 
                             id: Date.now() + 1, 
                             text: '完成项目提案', 
-                            date: formatDate(today), 
+                            date: todayStr, 
                             status: 'completed', 
                             priority: 'high',
                             notes: '需要包含预算和时间安排',
@@ -718,7 +729,7 @@
                         { 
                             id: Date.now() + 2, 
                             text: '团队会议', 
-                            date: formatDate(today), 
+                            date: todayStr, 
                             status: 'inprogress', 
                             priority: 'medium',
                             notes: '讨论季度目标',
@@ -727,7 +738,7 @@
                         { 
                             id: Date.now() + 3, 
                             text: '购买生活用品', 
-                            date: formatDate(today), 
+                            date: todayStr, 
                             status: 'pending', 
                             priority: 'low',
                             notes: '牛奶、面包、水果',
@@ -799,6 +810,11 @@
 
         function deleteTask(id) {
             if (confirm('确定要删除这个任务吗？')) {
+                // 记录已删除的任务ID
+                deletedTasks.push(id);
+                saveData();
+                
+                // 从任务列表中删除
                 tasks = tasks.filter(t => t.id != id);
                 saveData();
                 renderAll();
@@ -1106,7 +1122,11 @@
             
             const today = new Date();
             const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay() + 1); // 周一为一周的开始
+            
+            // 获取本周的周一
+            const dayOfWeek = today.getDay(); // 0是周日，1是周一，...，6是周六
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 如果今天是周日，则上周一
+            startOfWeek.setDate(today.getDate() + diffToMonday);
             
             for (let i = 0; i < 7; i++) {
                 const day = new Date(startOfWeek);
@@ -1262,11 +1282,15 @@
         }
 
         // 数据导入导出
-        function exportData() {
+        function exportCleanData() {
             if (!currentUser) return;
-            const dataStr = JSON.stringify(tasks, null, 2);
+            
+            // 只导出当前有效的任务，不导出已删除的任务
+            const cleanTasks = tasks.filter(task => !deletedTasks.includes(task.id));
+            const dataStr = JSON.stringify(cleanTasks, null, 2);
+            
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = `planner_backup_${currentUser}_${formatDate(new Date())}.json`;
+            const exportFileDefaultName = `planner_clean_backup_${currentUser}_${formatDate(new Date())}.json`;
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
@@ -1283,6 +1307,7 @@
                     const importedTasks = JSON.parse(e.target.result);
                     if (Array.isArray(importedTasks)) {
                         tasks = importedTasks;
+                        deletedTasks = []; // 清空已删除任务记录
                         saveData();
                         renderAll();
                         alert('数据导入成功！');
